@@ -11,18 +11,9 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusClient
 {
     private readonly ModbusTcpMessageBuilder _builder = new();
 
-    /// <summary>
-    /// Gets or sets the service provider used to resolve dependencies.
-    /// </summary>
     [NotNull]
     public IServiceProvider? ServiceProvider { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    /// <param name="endPoint"></param>
-    /// <param name="token"></param>
-    /// <returns></returns>
     public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
 
     public async ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
@@ -63,6 +54,10 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusClient
 
         // 获取数据字节数
         var byteCount = response[8];
+        if (byteCount + 9 != response.Length)
+        {
+            throw new Exception("响应长度与字节计数不匹配");
+        }
 
         // 解析线圈状态
         var coils = new bool[numberOfPoints];
