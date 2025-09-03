@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
-using Microsoft.Extensions.DependencyInjection;
+using Longbow.Modbus;
 using System.Runtime.Versioning;
 
-namespace Longbow.Modbus;
+namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// IModbusFactory 扩展方法
@@ -18,7 +18,7 @@ public static class ModbusExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IServiceCollection AddBootstrapBlazorModbusFactory(this IServiceCollection services)
+    public static IServiceCollection AddModbusFactory(this IServiceCollection services)
     {
         // 添加 IModbusFactory 服务
         services.AddSingleton<IModbusFactory, DefaultModbusFactory>();

@@ -2,24 +2,78 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
+using Longbow.TcpSocket;
+using System.Net;
+
 namespace Longbow.Modbus;
 
-class DefaultModbusTcpClient(ModbusTcpClientOptions options) : IModbusClient
+class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusClient
 {
+    private readonly ModbusTcpMessageBuilder _builder = new();
+
     /// <summary>
     /// Gets or sets the service provider used to resolve dependencies.
     /// </summary>
     [NotNull]
     public IServiceProvider? ServiceProvider { get; set; }
 
-    public bool[] ReadCoils(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    /// <param name="endPoint"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
 
-    public Task<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
+    public async ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
     {
-        throw new NotImplementedException();
+        if (!client.IsConnected)
+        {
+            throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
+        }
+
+        var data = _builder.Build(slaveAddress, 0x01, startAddress, numberOfPoints);
+        await client.SendAsync(data);
+
+        var received = await client.ReceiveAsync();
+        var response = received.Span;
+
+        // 解析电文
+        // 检查响应长度
+        if (response.Length < 9)
+        {
+            throw new Exception("响应长度不足");
+        }
+
+        // 检查事务标识符是否匹配
+        if (response[0] != data[0] || response[1] != data[1])
+        {
+            throw new Exception("事务标识符不匹配");
+        }
+
+        // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
+        if (response[7] == 0x83)
+        {
+            throw new Exception($"Modbus 异常响应，错误码: {response[8]}");
+        }
+        else if (response[7] != 0x01)
+        {
+            throw new Exception("功能码不匹配");
+        }
+
+        // 获取数据字节数
+        var byteCount = response[8];
+
+        // 解析线圈状态
+        var coils = new bool[numberOfPoints];
+        for (var i = 0; i < numberOfPoints; i++)
+        {
+            var byteIndex = 9 + i / 8;
+            var bitIndex = i % 8;
+            coils[i] = (response[byteIndex] & (1 << bitIndex)) != 0;
+        }
+
+        return coils;
     }
 
     public ushort[] ReadHoldingRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints)

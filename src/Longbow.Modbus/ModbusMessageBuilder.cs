@@ -15,40 +15,32 @@ public class ModbusTcpMessageBuilder
     /// <summary>
     /// 构建 Modbus TCP 请求消息方法
     /// </summary>
-    /// <param name="unitId"></param>
+    /// <param name="slaveAddress"></param>
     /// <param name="functionCode"></param>
-    /// <param name="pduData"></param>
+    /// <param name="startAddress"></param>
+    /// <param name="numberOfPoints"></param>
     /// <returns></returns>
-    public byte[] Build(byte unitId, byte functionCode, ReadOnlySpan<byte> pduData)
+    public byte[] Build(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints)
     {
-        // 1. 计算长度：单元标识符(1) + 功能码(1) + PDU数据长度(n)
-        ushort length = (ushort)(2 + pduData.Length);
+        byte[] request =
+        [
+            // MBAP头（7字节）
+            (byte)(_transactionId >> 8),   // 00 事务标识符高字节（可随机）
+            (byte)(_transactionId & 0xFF), // 01 事务标识符低字节
+            0x00,                          // 02 协议标识符高字节（Modbus固定0）
+            0x00,                          // 03 协议标识符低字节
+            0x00,                          // 04 长度高字节（后续字节数）
+            0x06,                          // 05 长度低字节（6字节PDU）
+            // PDU部分
+            slaveAddress,                  // 06 从站地址
+            functionCode,                  // 07 功能码（读保持寄存器）
+            (byte)(startAddress >> 8),     // 08 起始地址高字节
+            (byte)(startAddress & 0xFF),   // 09 起始地址低字节
+            (byte)(numberOfPoints >> 8),   // 10 寄存器数量高字节
+            (byte)(numberOfPoints & 0xFF), // 11 寄存器数量低字节
+        ];
 
-        // 2. 创建请求数据缓冲区：MBAP头(7) + 功能码(1) + PDU数据(n)
-        var frame = new byte[7 + 1 + pduData.Length];
-
-        // 3. 填充MBAP头
-        // 事务标识符 (2字节)
-        frame[0] = (byte)(_transactionId >> 8);   // 高位字节
-        frame[1] = (byte)(_transactionId & 0xFF); // 低位字节
-
-        // 协议标识符 (2字节), Modbus TCP固定为0
-        frame[2] = 0x00;
-        frame[3] = 0x00;
-
-        // 长度字段 (2字节)
-        frame[4] = (byte)(length >> 8);   // 长度高位字节
-        frame[5] = (byte)(length & 0xFF); // 长度低位字节
-
-        // 单元标识符 (1字节)
-        frame[6] = unitId;
-
-        // 4. 填充功能码和数据域 (PDU)
-        frame[7] = functionCode;
-
-        pduData.CopyTo(frame.AsSpan(8));
-
-        // 5. 递增事务标识符以供下次使用
+        // 递增事务标识符以供下次使用
         if (_transactionId >= ushort.MaxValue)
         {
             _transactionId = 0;
@@ -58,6 +50,6 @@ public class ModbusTcpMessageBuilder
             _transactionId++;
         }
 
-        return frame;
+        return request;
     }
 }
