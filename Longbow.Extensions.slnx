@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Longbow.Modbus/Longbow.Modbus.csproj" />
+    <Project Path="src/Longbow.Socket/Longbow.Socket.csproj" />
+    <Project Path="src/Longbow.TcpSocket/Longbow.TcpSocket.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/UnitTestSocket/UnitTestSocket.csproj" />
+  </Folder>
+</Solution>
