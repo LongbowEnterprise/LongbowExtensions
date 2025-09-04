@@ -14,7 +14,7 @@ public class DefaultSocketClientProviderTest
     public async Task DefaultSocketClient_Ok()
     {
         var sc = new ServiceCollection();
-        sc.AddBootstrapBlazorTcpSocketFactory();
+        sc.AddTcpSocketFactory();
         var provider = sc.BuildServiceProvider();
         var clientProvider = provider.GetRequiredService<ITcpSocketClientProvider>();
 
@@ -35,7 +35,7 @@ public class DefaultSocketClientProviderTest
         StartTcpServer(port);
 
         var sc = new ServiceCollection();
-        sc.AddBootstrapBlazorTcpSocketFactory();
+        sc.AddTcpSocketFactory();
         var provider = sc.BuildServiceProvider();
         var factory = provider.GetRequiredService<ITcpSocketFactory>();
         var client = factory.GetOrCreate("provider", op =>
