@@ -71,7 +71,7 @@ public class ModbusTcpMessageBuilder
         request[2] = 0x00;                          // 02 协议标识符高字节（Modbus固定0）
         request[3] = 0x00;                          // 03 协议标识符低字节
         request[4] = 0x00;                          // 04 长度高字节（后续字节数）
-        request[5] = 0x06;                          // 05 长度低字节（6字节PDU）
+        request[5] = (byte)(2 + data.Length);           // 05 长度低字节（6字节PDU）
 
         // PDU部分
         request[6] = slaveAddress;                  // 06 从站地址
