@@ -25,6 +25,7 @@
     <Project Path="src/Longbow.TcpSocket/Longbow.TcpSocket.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/UnitTestModbus/UnitTestModbus.csproj" />
     <Project Path="test/UnitTestSocket/UnitTestSocket.csproj" />
   </Folder>
 </Solution>

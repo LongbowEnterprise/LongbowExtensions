@@ -2,24 +2,83 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
+using Longbow.TcpSocket;
+using System.Net;
+
 namespace Longbow.Modbus;
 
-class DefaultModbusTcpClient(ModbusTcpClientOptions options) : IModbusClient
+class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 {
-    /// <summary>
-    /// Gets or sets the service provider used to resolve dependencies.
-    /// </summary>
+    private CancellationTokenSource? _receiveCancellationTokenSource;
+
+    private readonly ModbusTcpMessageBuilder _builder = new();
+
     [NotNull]
     public IServiceProvider? ServiceProvider { get; set; }
 
-    public bool[] ReadCoils(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
+    public Exception? Exception { get; private set; }
 
-    public Task<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
+    public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
+
+    public async ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
     {
-        throw new NotImplementedException();
+        if (!client.IsConnected)
+        {
+            throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
+        }
+
+        var data = _builder.Build(slaveAddress, 0x01, startAddress, numberOfPoints);
+        await client.SendAsync(data);
+
+        _receiveCancellationTokenSource ??= new();
+        var received = await client.ReceiveAsync(_receiveCancellationTokenSource.Token);
+        var response = received.Span;
+
+        // 解析电文
+        // 检查响应长度
+        if (response.Length < 9)
+        {
+            Exception = new Exception("Response length is insufficient 响应长度不足");
+            return [];
+        }
+
+        // 检查事务标识符是否匹配
+        if (response[0] != data[0] || response[1] != data[1])
+        {
+            Exception = new Exception("Transaction identifier mismatch 事务标识符不匹配");
+            return [];
+        }
+
+        // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
+        if (response[7] == 0x83)
+        {
+            Exception = new Exception($"Modbus abnormal response, error code: {response[8]}. 异常响应，错误码: {response[8]}");
+            return [];
+        }
+        else if (response[7] != 0x01)
+        {
+            Exception = new Exception($"Function code does not match 功能码不匹配期望值 0x01 实际值 0x{response[7]:X2}");
+            return [];
+        }
+
+        // 获取数据字节数
+        var byteCount = response[8];
+        if (byteCount + 9 != response.Length)
+        {
+            Exception = new Exception($"Response length does not match byte count 响应长度与字节计数不匹配 期望值 {byteCount + 9} 实际值 {response.Length}");
+            return [];
+        }
+
+        // 解析线圈状态
+        var coils = new bool[numberOfPoints];
+        for (var i = 0; i < numberOfPoints; i++)
+        {
+            var byteIndex = 9 + i / 8;
+            var bitIndex = i % 8;
+            coils[i] = (response[byteIndex] & (1 << bitIndex)) != 0;
+        }
+
+        return coils;
     }
 
     public ushort[] ReadHoldingRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
@@ -105,5 +164,54 @@ class DefaultModbusTcpClient(ModbusTcpClientOptions options) : IModbusClient
     public Task WriteSingleRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value)
     {
         throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public async ValueTask CloseAsync()
+    {
+        await CloseCoreAsync();
+    }
+
+    private async ValueTask CloseCoreAsync()
+    {
+        // 取消接收数据的任务
+        if (_receiveCancellationTokenSource != null)
+        {
+            _receiveCancellationTokenSource.Cancel();
+            _receiveCancellationTokenSource.Dispose();
+            _receiveCancellationTokenSource = null;
+        }
+
+        if (client.IsConnected)
+        {
+            await client.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Releases the resources used by the current instance of the class.
+    /// </summary>
+    /// <remarks>This method is called to free both managed and unmanaged resources. If the <paramref
+    /// name="disposing"/> parameter is <see langword="true"/>, the method releases managed resources in addition to
+    /// unmanaged resources. Override this method in a derived class to provide custom cleanup logic.</remarks>
+    /// <param name="disposing"><see langword="true"/> to release both managed and unmanaged resources; <see langword="false"/> to release only
+    /// unmanaged resources.</param>
+    private async ValueTask DisposeAsync(bool disposing)
+    {
+        if (disposing)
+        {
+            await CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsync(true);
+        GC.SuppressFinalize(this);
     }
 }

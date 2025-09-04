@@ -10,17 +10,17 @@ namespace Longbow.Modbus;
 public interface IModbusFactory
 {
     /// <summary>
-    /// 获得/创建 <see cref="IModbusClient"/> 客户端实例
+    /// 获得/创建 <see cref="IModbusTcpClient"/> 客户端实例
     /// </summary>
     /// <param name="name"></param>
     /// <param name="valueFactory"></param>
     /// <returns></returns>
-    IModbusClient GetOrCreate(string name, Action<ModbusClientOptions> valueFactory);
+    IModbusTcpClient GetOrCreateTcpMaster(string name, Action<ModbusTcpClientOptions> valueFactory);
 
     /// <summary>
-    /// 移除指定名称的 <see cref="IModbusClient"/> 客户端实例
+    /// 移除指定名称的 <see cref="IModbusTcpClient"/> 客户端实例
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    IModbusClient? Remove(string name);
+    IModbusTcpClient? RemoveTcpMaster(string name);
 }

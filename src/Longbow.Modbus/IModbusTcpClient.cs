@@ -2,30 +2,42 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://github.com/LongbowExtensions/
 
+using System.Net;
+
 namespace Longbow.Modbus;
 
 /// <summary>
 /// Modbus 客户端接口
 /// </summary>
-public interface IModbusClient
+public interface IModbusTcpClient : IAsyncDisposable
 {
     /// <summary>
-    /// Reads from 1 to 2000 contiguous coils status.
+    /// 异步连接方法
     /// </summary>
-    /// <param name="slaveAddress">Address of device to read values from.</param>
-    /// <param name="startAddress">Address to begin reading.</param>
-    /// <param name="numberOfPoints">Number of coils to read.</param>
-    /// <returns>Coils status.</returns>
-    bool[] ReadCoils(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    /// <param name="endPoint"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default);
 
     /// <summary>
-    /// Asynchronously reads from 1 to 2000 contiguous coils status.
+    /// 断开连接方法
+    /// </summary>
+    ValueTask CloseAsync();
+
+    /// <summary>
+    /// 获得 上一次操作异常信息。操作正常时为 null
+    /// </summary>
+    Exception? Exception { get; }
+
+    /// <summary>
+    /// 从指定站点异步读取线圈（FC1），默认超时时间为1000ms。
+    /// <para>Asynchronously reads from 1 to 2000 contiguous coils status.</para>
     /// </summary>
     /// <param name="slaveAddress">Address of device to read values from.</param>
     /// <param name="startAddress">Address to begin reading.</param>
     /// <param name="numberOfPoints">Number of coils to read.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    Task<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
     /// Reads from 1 to 2000 contiguous discrete input status.
