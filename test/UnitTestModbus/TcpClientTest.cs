@@ -107,4 +107,23 @@ public class TcpClientTest
         var response = await client.WriteCoilAsync(0x01, 0, true);
         Assert.True(response);
     }
+
+    [Fact]
+    public async Task WriteMultipleCoilsAsync_Ok()
+    {
+        var sc = new ServiceCollection();
+        sc.AddTcpSocketFactory();
+        sc.AddModbusFactory();
+
+        var provider = sc.BuildServiceProvider();
+        var factory = provider.GetRequiredService<IModbusFactory>();
+        await using var client = factory.GetOrCreateTcpMaster("test");
+
+        // 连接 Master
+        await client.ConnectAsync("127.0.0.1", 502);
+
+        // 读取 0x01 从站输入寄存器数据
+        var response = await client.WriteMultipleCoilsAsync(0x01, 0, [true, false, true]);
+        Assert.True(response);
+    }
 }
