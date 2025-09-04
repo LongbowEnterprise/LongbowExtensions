@@ -15,9 +15,9 @@ namespace Longbow.Modbus;
 [UnsupportedOSPlatform("browser")]
 class DefaultModbusFactory(IServiceProvider provider) : IModbusFactory
 {
-    private readonly ConcurrentDictionary<string, IModbusClient> _pool = new();
+    private readonly ConcurrentDictionary<string, IModbusTcpClient> _pool = new();
 
-    public IModbusClient GetOrCreate(string name, Action<ModbusClientOptions> valueFactory)
+    public IModbusTcpClient GetOrCreateTcpMaster(string name, Action<ModbusTcpClientOptions> valueFactory)
     {
         return _pool.GetOrAdd(name, key =>
         {
@@ -27,17 +27,20 @@ class DefaultModbusFactory(IServiceProvider provider) : IModbusFactory
             var factory = provider.GetRequiredService<ITcpSocketFactory>();
             var client = factory.GetOrCreate(name, op =>
             {
+                op.ConnectTimeout = options.ConnectTimeout;
                 op.SendTimeout = options.WriteTimeout;
                 op.ReceiveTimeout = options.ReadTimeout;
                 op.IsAutoReceive = false;
+                op.IsAutoReconnect = false;
+                op.LocalEndPoint = options.LocalEndPoint;
             });
             return new DefaultModbusTcpClient(client);
         });
     }
 
-    public IModbusClient? Remove(string name)
+    public IModbusTcpClient? RemoveTcpMaster(string name)
     {
-        IModbusClient? client = null;
+        IModbusTcpClient? client = null;
         if (_pool.TryRemove(name, out var c))
         {
             client = c;

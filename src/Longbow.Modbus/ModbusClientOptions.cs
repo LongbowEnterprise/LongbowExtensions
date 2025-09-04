@@ -10,12 +10,12 @@ namespace Longbow.Modbus;
 public class ModbusClientOptions
 {
     /// <summary>
-    /// 获得/设置 读取超时时间 默认 3000ms
+    /// 获得/设置 读取超时时间 默认 1000ms
     /// </summary>
-    public int ReadTimeout { get; set; }
+    public int ReadTimeout { get; set; } = 1000;
 
     /// <summary>
-    /// 获得/设置 写入超时时间 默认 3000ms
+    /// 获得/设置 写入超时时间 默认 1000ms
     /// </summary>
-    public int WriteTimeout { get; set; }
+    public int WriteTimeout { get; set; } = 1000;
 }

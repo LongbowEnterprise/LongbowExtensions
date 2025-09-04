@@ -8,7 +8,7 @@ using System.Runtime.Versioning;
 namespace Longbow.Modbus;
 
 /// <summary>
-/// <see cref="IModbusClient"/> 扩展方法类
+/// <see cref="IModbusTcpClient"/> 扩展方法类
 /// </summary>
 [UnsupportedOSPlatform("browser")]
 public static class IModbusClientExtensions
@@ -23,7 +23,7 @@ public static class IModbusClientExtensions
     /// langword="default"/> if not provided.</param>
     /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the connection
     /// is successfully established; otherwise, <see langword="false"/>.</returns>
-    public static ValueTask<bool> ConnectAsync(this IModbusClient client, string ipString, int port, CancellationToken token = default)
+    public static ValueTask<bool> ConnectAsync(this IModbusTcpClient client, string ipString, int port, CancellationToken token = default)
     {
         var endPoint = TcpSocketUtility.ConvertToIpEndPoint(ipString, port);
         return client.ConnectAsync(endPoint, token);
