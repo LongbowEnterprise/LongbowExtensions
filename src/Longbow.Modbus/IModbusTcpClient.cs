@@ -59,15 +59,15 @@ public interface IModbusTcpClient : IAsyncDisposable
     /// <returns>A task that represents the asynchronous read operation.</returns>
     ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
-    ///// <summary>
-    ///// 从指定站点异步读取输入寄存器方法 功能码 0x04
-    ///// <para>Asynchronously reads contiguous block of input registers.</para>
-    ///// </summary>
-    ///// <param name="slaveAddress">Address of device to read values from.</param>
-    ///// <param name="startAddress">Address to begin reading.</param>
-    ///// <param name="numberOfPoints">Number of holding registers to read.</param>
-    ///// <returns>A task that represents the asynchronous read operation.</returns>
-    //ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    /// <summary>
+    /// 从指定站点异步读取输入寄存器方法 功能码 0x04
+    /// <para>Asynchronously reads contiguous block of input registers.</para>
+    /// </summary>
+    /// <param name="slaveAddress">Address of device to read values from.</param>
+    /// <param name="startAddress">Address to begin reading.</param>
+    /// <param name="numberOfPoints">Number of holding registers to read.</param>
+    /// <returns>A task that represents the asynchronous read operation.</returns>
+    ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
     /// Writes a single coil value.
