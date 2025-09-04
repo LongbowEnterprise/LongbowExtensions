@@ -70,29 +70,22 @@ public interface IModbusTcpClient : IAsyncDisposable
     ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
-    /// Writes a single coil value.
-    /// </summary>
-    /// <param name="slaveAddress">Address of the device to write to.</param>
-    /// <param name="coilAddress">Address to write value to.</param>
-    /// <param name="value">Value to write.</param>
-    void WriteSingleCoil(byte slaveAddress, ushort coilAddress, bool value);
-
-    /// <summary>
     /// Asynchronously writes a single coil value.
     /// </summary>
     /// <param name="slaveAddress">Address of the device to write to.</param>
     /// <param name="coilAddress">Address to write value to.</param>
     /// <param name="value">Value to write.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteSingleCoilAsync(byte slaveAddress, ushort coilAddress, bool value);
+    ValueTask<bool> WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value);
 
     /// <summary>
-    /// Writes a single holding register.
+    /// Asynchronously writes a sequence of coils.
     /// </summary>
     /// <param name="slaveAddress">Address of the device to write to.</param>
-    /// <param name="registerAddress">Address to write.</param>
-    /// <param name="value">Value to write.</param>
-    void WriteSingleRegister(byte slaveAddress, ushort registerAddress, ushort value);
+    /// <param name="startAddress">Address to begin writing values.</param>
+    /// <param name="data">Values to write.</param>
+    /// <returns>A task that represents the asynchronous write operation.</returns>
+    Task WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data);
 
     /// <summary>
     /// Asynchronously writes a single holding register.
@@ -104,14 +97,6 @@ public interface IModbusTcpClient : IAsyncDisposable
     Task WriteSingleRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value);
 
     /// <summary>
-    /// Writes a block of 1 to 123 contiguous registers.
-    /// </summary>
-    /// <param name="slaveAddress">Address of the device to write to.</param>
-    /// <param name="startAddress">Address to begin writing values.</param>
-    /// <param name="data">Values to write.</param>
-    void WriteMultipleRegisters(byte slaveAddress, ushort startAddress, ushort[] data);
-
-    /// <summary>
     /// Asynchronously writes a block of 1 to 123 contiguous registers.
     /// </summary>
     /// <param name="slaveAddress">Address of the device to write to.</param>
@@ -119,23 +104,6 @@ public interface IModbusTcpClient : IAsyncDisposable
     /// <param name="data">Values to write.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
     Task WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data);
-
-    /// <summary>
-    /// Writes a sequence of coils.
-    /// </summary>
-    /// <param name="slaveAddress">Address of the device to write to.</param>
-    /// <param name="startAddress">Address to begin writing values.</param>
-    /// <param name="data">Values to write.</param>
-    void WriteMultipleCoils(byte slaveAddress, ushort startAddress, bool[] data);
-
-    /// <summary>
-    /// Asynchronously writes a sequence of coils.
-    /// </summary>
-    /// <param name="slaveAddress">Address of the device to write to.</param>
-    /// <param name="startAddress">Address to begin writing values.</param>
-    /// <param name="data">Values to write.</param>
-    /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data);
 
     /// <summary>
     /// Performs a combination of one read operation and one write operation in a single Modbus transaction.
@@ -169,13 +137,4 @@ public interface IModbusTcpClient : IAsyncDisposable
             ushort numberOfPointsToRead,
             ushort startWriteAddress,
             ushort[] writeData);
-
-    /// <summary>
-    /// Write a file record to the device.
-    /// </summary>
-    /// <param name="slaveAdress">Address of device to write values to</param>
-    /// <param name="fileNumber">The Extended Memory file number</param>
-    /// <param name="startingAddress">The starting register address within the file</param>
-    /// <param name="data">The data to be written</param>
-    void WriteFileRecord(byte slaveAdress, ushort fileNumber, ushort startingAddress, byte[] data);
 }
