@@ -104,37 +104,4 @@ public interface IModbusTcpClient : IAsyncDisposable
     /// <param name="data">Values to write.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
     ValueTask<bool> WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data);
-
-    /// <summary>
-    /// Performs a combination of one read operation and one write operation in a single Modbus transaction.
-    /// The write operation is performed before the read.
-    /// </summary>
-    /// <param name="slaveAddress">Address of device to read values from.</param>
-    /// <param name="startReadAddress">Address to begin reading (Holding registers are addressed starting at 0).</param>
-    /// <param name="numberOfPointsToRead">Number of registers to read.</param>
-    /// <param name="startWriteAddress">Address to begin writing (Holding registers are addressed starting at 0).</param>
-    /// <param name="writeData">Register values to write.</param>
-    ushort[] ReadWriteMultipleRegisters(
-            byte slaveAddress,
-            ushort startReadAddress,
-            ushort numberOfPointsToRead,
-            ushort startWriteAddress,
-            ushort[] writeData);
-
-    /// <summary>
-    /// Asynchronously performs a combination of one read operation and one write operation in a single Modbus transaction.
-    /// The write operation is performed before the read.
-    /// </summary>
-    /// <param name="slaveAddress">Address of device to read values from.</param>
-    /// <param name="startReadAddress">Address to begin reading (Holding registers are addressed starting at 0).</param>
-    /// <param name="numberOfPointsToRead">Number of registers to read.</param>
-    /// <param name="startWriteAddress">Address to begin writing (Holding registers are addressed starting at 0).</param>
-    /// <param name="writeData">Register values to write.</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    Task<ushort[]> ReadWriteMultipleRegistersAsync(
-            byte slaveAddress,
-            ushort startReadAddress,
-            ushort numberOfPointsToRead,
-            ushort startWriteAddress,
-            ushort[] writeData);
 }

@@ -4,7 +4,6 @@
 
 using Longbow.TcpSocket;
 using System.Net;
-using System.Net.Mail;
 
 namespace Longbow.Modbus;
 
@@ -13,9 +12,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
     private CancellationTokenSource? _receiveCancellationTokenSource;
 
     private readonly ModbusTcpMessageBuilder _builder = new();
-
-    [NotNull]
-    public IServiceProvider? ServiceProvider { get; set; }
 
     public Exception? Exception { get; private set; }
 
@@ -36,17 +32,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
     public ValueTask<bool> WriteRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value) => WriteUShortValuesAsync(slaveAddress, 0x06, registerAddress, [value]);
 
     public ValueTask<bool> WriteMultipleRegistersAsync(byte slaveAddress, ushort registerAddress, ushort[] values) => WriteUShortValuesAsync(slaveAddress, 0x10, registerAddress, values);
-
-    public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<ushort[]> ReadWriteMultipleRegistersAsync(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
-    {
-        throw new NotImplementedException();
-    }
-
 
     private async ValueTask<TResult?> ReadAsync<TResult>(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints, Func<ReadOnlyMemory<byte>, ushort, TResult> parser)
     {
@@ -74,45 +59,86 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         return parser(received, numberOfPoints);
     }
 
-    private ValueTask<bool> WriteBoolValuesAsync(byte slaveAddress, byte functionCode, ushort address, bool[] values)
+    private async ValueTask<bool> WriteBoolValuesAsync(byte slaveAddress, byte functionCode, ushort address, bool[] values)
     {
         if (!client.IsConnected)
         {
             throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
         }
 
-        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, WriteBoolValues(address, values));
-        return client.SendAsync(request);
+        var data = WriteBoolValues(address, values);
+        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, data);
+        var result = await client.SendAsync(request);
+        if (result)
+        {
+            var response = await client.ReceiveAsync();
+            result = false;
+            if (response.Length == 12 && response.Span[7] == functionCode)
+            {
+                result = values.Length == 1
+                    ? data.Span.SequenceEqual(response.Span[8..])
+                    : response.Span[10..11].SequenceEqual(data.Span[2..3]);
+            }
+        }
+        return result;
     }
 
-    private ValueTask<bool> WriteUShortValuesAsync(byte slaveAddress, byte functionCode, ushort address, ushort[] values)
+    private async ValueTask<bool> WriteUShortValuesAsync(byte slaveAddress, byte functionCode, ushort address, ushort[] values)
     {
         if (!client.IsConnected)
         {
             throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
         }
 
-        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, WriteUShortValues(address, values));
-        return client.SendAsync(request);
+        var data = WriteUShortValues(address, values);
+        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, data);
+        var result = await client.SendAsync(request);
+        if (result)
+        {
+            var response = await client.ReceiveAsync();
+            result = response.Length == 12 && response.Span[7] == functionCode && data.Span.SequenceEqual(response.Span[8..]);
+        }
+        return result;
     }
 
     private static ReadOnlyMemory<byte> WriteBoolValues(ushort address, bool[] values)
     {
-        var data = new byte[2 + values.Length * 2];
+        int byteCount = (values.Length + 7) / 8;
+        var data = new byte[values.Length > 1 ? 5 + byteCount : 4];
         data[0] = (byte)(address >> 8);
         data[1] = (byte)address;
 
-        for (var i = 0; i < values.Length; i++)
+        if (values.Length > 1)
         {
-            data[i * 2 + 2] = values[i] ? (byte)0xFF : (byte)0x00;
-            data[i * 2 + 3] = 0x00;
+            // 多值时，写入数量
+            data[2] = (byte)(values.Length >> 8);
+            data[3] = (byte)(values.Length);
+
+            // 字节数
+            data[4] = (byte)(byteCount);
+
+            for (var i = 0; i < values.Length; i++)
+            {
+                if (values[i])
+                {
+                    int byteIndex = 5 + i / 8;
+                    int bitIndex = i % 8;
+                    data[byteIndex] |= (byte)(1 << bitIndex);
+                }
+            }
+        }
+        else
+        {
+            // 组装数据
+            data[2] = values[0] ? (byte)0xFF : (byte)0x00;
+            data[3] = 0x00;
         }
         return data;
     }
 
     private static ReadOnlyMemory<byte> WriteUShortValues(ushort address, ushort[] values)
     {
-        var data = new byte[5 + values.Length * 2];
+        var data = new byte[2 + values.Length * 2];
         data[0] = (byte)(address >> 8);
         data[1] = (byte)address;
 

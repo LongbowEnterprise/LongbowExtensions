@@ -21,8 +21,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站线圈数据
         var response = await client.ReadCoilsAsync(0x01, 0, 10);
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
@@ -41,8 +39,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站离散输入数据
         var response = await client.ReadInputsAsync(0x01, 0, 10);
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
@@ -62,8 +58,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站保持寄存器数据
         var response = await client.ReadHoldingRegistersAsync(0x01, 0, 10);
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
@@ -82,8 +76,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站输入寄存器数据
         var response = await client.ReadInputRegistersAsync(0x01, 0, 10);
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
@@ -102,8 +94,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站输入寄存器数据
         var response = await client.WriteCoilAsync(0x01, 0, true);
         Assert.True(response);
     }
@@ -121,8 +111,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站输入寄存器数据
         var response = await client.WriteMultipleCoilsAsync(0x01, 0, [true, false, true]);
         Assert.True(response);
     }
@@ -140,8 +128,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站输入寄存器数据
         var response = await client.WriteRegisterAsync(0x01, 0, 12);
         Assert.True(response);
     }
@@ -159,8 +145,6 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-
-        // 读取 0x01 从站输入寄存器数据
         var response = await client.WriteMultipleRegistersAsync(0x01, 0, [12, 0, 23, 0, 45]);
         Assert.True(response);
     }
