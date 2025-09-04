@@ -17,7 +17,7 @@ public class TcpClientTest
 
         var provider = sc.BuildServiceProvider();
         var factory = provider.GetRequiredService<IModbusFactory>();
-        var client = factory.GetOrCreate("test", op =>
+        await using var client = factory.GetOrCreateTcpMaster("test", op =>
         {
             op.ReadTimeout = 3000;
             op.WriteTimeout = 3000;
@@ -27,6 +27,6 @@ public class TcpClientTest
         await client.ConnectAsync("127.0.0.1", 502);
 
         // 读取 0x01 从站线圈数据
-        var response = await client.ReadCoilsAsync(0x01, 0, 5);
+        var response = await client.ReadCoilsAsync(0x01, 0, 10);
     }
 }
