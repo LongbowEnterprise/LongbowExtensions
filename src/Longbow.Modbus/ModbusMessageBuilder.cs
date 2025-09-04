@@ -33,7 +33,7 @@ public class ModbusTcpMessageBuilder
             0x06,                          // 05 长度低字节（6字节PDU）
             // PDU部分
             slaveAddress,                  // 06 从站地址
-            functionCode,                  // 07 功能码（读保持寄存器）
+            functionCode,                  // 07 功能码
             (byte)(startAddress >> 8),     // 08 起始地址高字节
             (byte)(startAddress & 0xFF),   // 09 起始地址低字节
             (byte)(numberOfPoints >> 8),   // 10 寄存器数量高字节
