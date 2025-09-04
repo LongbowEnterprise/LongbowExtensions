@@ -96,7 +96,13 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         if (result)
         {
             var response = await client.ReceiveAsync();
-            result = response.Length == 12 && response.Span[7] == functionCode && data.Span.SequenceEqual(response.Span[8..]);
+            result = false;
+            if (response.Length == 12 && response.Span[7] == functionCode)
+            {
+                result = values.Length == 1
+                    ? data.Span.SequenceEqual(response.Span[8..])
+                    : response.Span[10..11].SequenceEqual(data.Span[2..3]);
+            }
         }
         return result;
     }
@@ -138,14 +144,30 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     private static ReadOnlyMemory<byte> WriteUShortValues(ushort address, ushort[] values)
     {
-        var data = new byte[2 + values.Length * 2];
+        int byteCount = values.Length * 2;
+        var data = new byte[values.Length > 1 ? 5 + byteCount : 4];
         data[0] = (byte)(address >> 8);
         data[1] = (byte)address;
 
-        for (var i = 0; i < values.Length; i++)
+        if (values.Length > 1)
         {
-            data[i * 2 + 2] = (byte)(values[i] >> 8);
-            data[i * 2 + 3] = (byte)(values[i] & 0xFF);
+            // 多值时，写入数量
+            data[2] = (byte)(values.Length >> 8);
+            data[3] = (byte)(values.Length);
+
+            // 字节数
+            data[4] = (byte)(byteCount);
+
+            for (var i = 0; i < values.Length; i++)
+            {
+                data[i * 2 + 5] = (byte)(values[i] >> 8);
+                data[i * 2 + 6] = (byte)(values[i] & 0xFF);
+            }
+        }
+        else
+        {
+            data[2] = (byte)(values[0] >> 8);
+            data[3] = (byte)(values[0] & 0xFF);
         }
         return data;
     }

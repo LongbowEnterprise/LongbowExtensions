@@ -111,7 +111,7 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-        var response = await client.WriteMultipleCoilsAsync(0x01, 0, [true, false, true]);
+        var response = await client.WriteMultipleCoilsAsync(0x01, 0, [true, true, true, true, true, true, true, true, false, true]);
         Assert.True(response);
     }
 
@@ -145,7 +145,7 @@ public class TcpClientTest
 
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
-        var response = await client.WriteMultipleRegistersAsync(0x01, 0, [12, 0, 23, 0, 45]);
+        var response = await client.WriteMultipleRegistersAsync(0x01, 0, [12, 0, 23, 0, 46, 0, 01, 02, 04, 05]);
         Assert.True(response);
     }
 }
