@@ -20,6 +20,69 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
 
+    public ValueTask<bool[]?> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints, ReadBool);
+
+    public ValueTask<bool[]?> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs, ReadBool);
+
+    public ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x03, startAddress, numberOfPoints, ReadUShort);
+
+    public ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x04, startAddress, numberOfPoints, ReadUShort);
+
+    public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ushort[]> ReadWriteMultipleRegistersAsync(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteFileRecord(byte slaveAdress, ushort fileNumber, ushort startingAddress, byte[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteMultipleCoils(byte slaveAddress, ushort startAddress, bool[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteMultipleRegisters(byte slaveAddress, ushort startAddress, ushort[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteSingleCoil(byte slaveAddress, ushort coilAddress, bool value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteSingleCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteSingleRegister(byte slaveAddress, ushort registerAddress, ushort value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task WriteSingleRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value)
+    {
+        throw new NotImplementedException();
+    }
+
     private async ValueTask<TResult?> ReadAsync<TResult>(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints, Func<ReadOnlyMemory<byte>, ushort, TResult> parser)
     {
         if (!client.IsConnected)
@@ -109,69 +172,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         }
 
         return true;
-    }
-
-    public ValueTask<bool[]?> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints, ReadBool);
-
-    public ValueTask<bool[]?> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs, ReadBool);
-
-    public ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x03, startAddress, numberOfPoints, ReadUShort);
-
-    public ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x04, startAddress, numberOfPoints, ReadUShort);
-
-    public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<ushort[]> ReadWriteMultipleRegistersAsync(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteFileRecord(byte slaveAdress, ushort fileNumber, ushort startingAddress, byte[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteMultipleCoils(byte slaveAddress, ushort startAddress, bool[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteMultipleRegisters(byte slaveAddress, ushort startAddress, ushort[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteSingleCoil(byte slaveAddress, ushort coilAddress, bool value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteSingleCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteSingleRegister(byte slaveAddress, ushort registerAddress, ushort value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteSingleRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value)
-    {
-        throw new NotImplementedException();
     }
 
     /// <summary>
