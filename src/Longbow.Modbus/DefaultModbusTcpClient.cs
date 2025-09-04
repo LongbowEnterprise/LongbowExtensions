@@ -79,7 +79,7 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         }
         else if (response[7] != functionCode)
         {
-            Exception = new Exception($"Function code does not match 功能码不匹配期望值 0x01 实际值 0x{response[7]:X2}");
+            Exception = new Exception($"Function code does not match 功能码不匹配期望值 0x{functionCode:X2} 实际值 0x{response[7]:X2}");
             return false;
         }
 
