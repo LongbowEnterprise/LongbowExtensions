@@ -28,17 +28,14 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     public ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x04, startAddress, numberOfPoints, ReadUShort);
 
+    public ValueTask<bool> WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value) => WriteBoolAsync(slaveAddress, 0x05, coilAddress, value);
+
     public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
     {
         throw new NotImplementedException();
     }
 
     public Task<ushort[]> ReadWriteMultipleRegistersAsync(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteFileRecord(byte slaveAdress, ushort fileNumber, ushort startingAddress, byte[] data)
     {
         throw new NotImplementedException();
     }
@@ -63,16 +60,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         throw new NotImplementedException();
     }
 
-    public void WriteSingleCoil(byte slaveAddress, ushort coilAddress, bool value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteSingleCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
-    {
-        throw new NotImplementedException();
-    }
-
     public void WriteSingleRegister(byte slaveAddress, ushort registerAddress, ushort value)
     {
         throw new NotImplementedException();
@@ -90,8 +77,8 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
             throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
         }
 
-        var data = _builder.Build(slaveAddress, functionCode, startAddress, numberOfPoints);
-        var result = await client.SendAsync(data);
+        var request = _builder.BuildReadRequest(slaveAddress, functionCode, startAddress, numberOfPoints);
+        var result = await client.SendAsync(request);
         if (!result)
         {
             return default;
@@ -101,12 +88,33 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         var received = await client.ReceiveAsync(_receiveCancellationTokenSource.Token);
         var response = received.Span;
 
-        if (!ValidateResponse(response, data.Span[..2], functionCode))
+        if (!ValidateResponse(response, request.Span[..2], functionCode))
         {
             return default;
         }
 
         return parser(received, numberOfPoints);
+    }
+
+    private ValueTask<bool> WriteBoolAsync(byte slaveAddress, byte functionCode, ushort address, bool value)
+    {
+        if (!client.IsConnected)
+        {
+            throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
+        }
+
+        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, WriteBool(address, value));
+        return client.SendAsync(request);
+    }
+
+    private static ReadOnlyMemory<byte> WriteBool(ushort address, bool value)
+    {
+        var data = new byte[4];
+        data[0] = (byte)(address >> 8);
+        data[1] = (byte)address;
+        data[2] = value ? (byte)0xFF : (byte)0x00;
+        data[3] = 0x00;
+        return data;
     }
 
     private static bool[] ReadBool(ReadOnlyMemory<byte> response, ushort numberOfPoints)
