@@ -24,7 +24,7 @@ public class TcpSocketFactoryTest
         {
             builder.AddProvider(new MockLoggerProvider());
         });
-        sc.AddBootstrapBlazorTcpSocketFactory();
+        sc.AddTcpSocketFactory();
         var provider = sc.BuildServiceProvider();
         var factory = provider.GetRequiredService<ITcpSocketFactory>();
         var client1 = factory.GetOrCreate("demo", op => op.LocalEndPoint = TcpSocketUtility.ConvertToIpEndPoint("localhost", 0));
@@ -641,7 +641,7 @@ public class TcpSocketFactoryTest
     public void TryConvertTo_Error()
     {
         var converter = new MockErrorDataConverter();
-        var result = converter.TryConvertTo(new byte[] { 0x1, 0x2 }, out var entity);
+        var result = converter.TryConvertTo(new byte[] { 0x1, 0x2 }, out var _);
         Assert.False(result);
     }
 
@@ -1133,7 +1133,7 @@ public class TcpSocketFactoryTest
         {
             builder.AddProvider(new MockLoggerProvider());
         });
-        sc.AddBootstrapBlazorTcpSocketFactory();
+        sc.AddTcpSocketFactory();
         builder?.Invoke(sc);
 
         var provider = sc.BuildServiceProvider();
