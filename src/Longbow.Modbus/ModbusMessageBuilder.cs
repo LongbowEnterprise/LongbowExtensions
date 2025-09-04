@@ -20,7 +20,7 @@ public class ModbusTcpMessageBuilder
     /// <param name="startAddress"></param>
     /// <param name="numberOfPoints"></param>
     /// <returns></returns>
-    public byte[] Build(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints)
+    public ReadOnlyMemory<byte> Build(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints)
     {
         byte[] request =
         [

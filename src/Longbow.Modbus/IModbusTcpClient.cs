@@ -40,22 +40,14 @@ public interface IModbusTcpClient : IAsyncDisposable
     ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
-    /// Reads from 1 to 2000 contiguous discrete input status.
-    /// </summary>
-    /// <param name="slaveAddress">Address of device to read values from.</param>
-    /// <param name="startAddress">Address to begin reading.</param>
-    /// <param name="numberOfPoints">Number of discrete inputs to read.</param>
-    /// <returns>Discrete inputs status.</returns>
-    bool[] ReadInputs(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
-
-    /// <summary>
-    /// Asynchronously reads from 1 to 2000 contiguous discrete input status.
+    /// 从指定站点异步读取离散输入（FC2），默认超时时间为1000ms。
+    /// <para>Asynchronously reads from 1 to 2000 contiguous discrete input status.</para>
     /// </summary>
     /// <param name="slaveAddress">Address of device to read values from.</param>
     /// <param name="startAddress">Address to begin reading.</param>
     /// <param name="numberOfPoints">Number of discrete inputs to read.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    Task<bool[]> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    ValueTask<bool[]> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
     /// Reads contiguous block of holding registers.

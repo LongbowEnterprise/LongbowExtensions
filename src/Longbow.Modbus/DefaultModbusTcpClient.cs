@@ -20,45 +20,67 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
 
-    public async ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
+    private async ValueTask<bool[]> ReadAsync(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints)
     {
         if (!client.IsConnected)
         {
             throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
         }
 
-        var data = _builder.Build(slaveAddress, 0x01, startAddress, numberOfPoints);
-        await client.SendAsync(data);
+        var data = _builder.Build(slaveAddress, functionCode, startAddress, numberOfPoints);
+        var result = await client.SendAsync(data);
+        if (!result)
+        {
+            return [];
+        }
 
         _receiveCancellationTokenSource ??= new();
         var received = await client.ReceiveAsync(_receiveCancellationTokenSource.Token);
         var response = received.Span;
 
+        if (!ValidateResponse(response, data.Span[..2], functionCode))
+        {
+            return [];
+        }
+
+        var values = new bool[numberOfPoints];
+        for (var i = 0; i < numberOfPoints; i++)
+        {
+            var byteIndex = 9 + i / 8;
+            var bitIndex = i % 8;
+            values[i] = (response[byteIndex] & (1 << bitIndex)) != 0;
+        }
+
+        return values;
+    }
+
+    private bool ValidateResponse(ReadOnlySpan<byte> response, ReadOnlySpan<byte> transactionId, byte functionCode)
+    {
         // 解析电文
         // 检查响应长度
         if (response.Length < 9)
         {
             Exception = new Exception("Response length is insufficient 响应长度不足");
-            return [];
+            return false;
         }
 
         // 检查事务标识符是否匹配
-        if (response[0] != data[0] || response[1] != data[1])
+        if (response[0] != transactionId[0] || response[1] != transactionId[1])
         {
             Exception = new Exception("Transaction identifier mismatch 事务标识符不匹配");
-            return [];
+            return false;
         }
 
         // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
         if (response[7] == 0x83)
         {
             Exception = new Exception($"Modbus abnormal response, error code: {response[8]}. 异常响应，错误码: {response[8]}");
-            return [];
+            return false;
         }
-        else if (response[7] != 0x01)
+        else if (response[7] != functionCode)
         {
             Exception = new Exception($"Function code does not match 功能码不匹配期望值 0x01 实际值 0x{response[7]:X2}");
-            return [];
+            return false;
         }
 
         // 获取数据字节数
@@ -66,20 +88,15 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         if (byteCount + 9 != response.Length)
         {
             Exception = new Exception($"Response length does not match byte count 响应长度与字节计数不匹配 期望值 {byteCount + 9} 实际值 {response.Length}");
-            return [];
+            return false;
         }
 
-        // 解析线圈状态
-        var coils = new bool[numberOfPoints];
-        for (var i = 0; i < numberOfPoints; i++)
-        {
-            var byteIndex = 9 + i / 8;
-            var bitIndex = i % 8;
-            coils[i] = (response[byteIndex] & (1 << bitIndex)) != 0;
-        }
-
-        return coils;
+        return true;
     }
+
+    public ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints);
+
+    public ValueTask<bool[]> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs);
 
     public ushort[] ReadHoldingRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
     {
@@ -102,11 +119,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
     }
 
     public bool[] ReadInputs(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<bool[]> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
     {
         throw new NotImplementedException();
     }
