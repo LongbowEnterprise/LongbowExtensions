@@ -69,23 +69,23 @@ public class TcpClientTest
         Assert.Equal(10, response.Length);
     }
 
-    //[Fact]
-    //public async Task ReadInputRegistersAsync_Ok()
-    //{
-    //    var sc = new ServiceCollection();
-    //    sc.AddTcpSocketFactory();
-    //    sc.AddModbusFactory();
+    [Fact]
+    public async Task ReadInputRegistersAsync_Ok()
+    {
+        var sc = new ServiceCollection();
+        sc.AddTcpSocketFactory();
+        sc.AddModbusFactory();
 
-    //    var provider = sc.BuildServiceProvider();
-    //    var factory = provider.GetRequiredService<IModbusFactory>();
-    //    await using var client = factory.GetOrCreateTcpMaster("test");
+        var provider = sc.BuildServiceProvider();
+        var factory = provider.GetRequiredService<IModbusFactory>();
+        await using var client = factory.GetOrCreateTcpMaster("test");
 
-    //    // 连接 Master
-    //    await client.ConnectAsync("127.0.0.1", 502);
+        // 连接 Master
+        await client.ConnectAsync("127.0.0.1", 502);
 
-    //    // 读取 0x01 从站输入寄存器数据
-    //    var response = await client.ReadInputRegistersAsync(0x01, 0, 10);
-    //    Assert.NotNull(response);
-    //    Assert.Equal(10, response.Length);
-    //}
+        // 读取 0x01 从站输入寄存器数据
+        var response = await client.ReadInputRegistersAsync(0x01, 0, 10);
+        Assert.NotNull(response);
+        Assert.Equal(10, response.Length);
+    }
 }
