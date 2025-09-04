@@ -63,7 +63,7 @@ public class TcpClientTest
         // 连接 Master
         await client.ConnectAsync("127.0.0.1", 502);
 
-        // 读取 0x01 从站离散输入数据
+        // 读取 0x01 从站保持寄存器数据
         var response = await client.ReadHoldingRegistersAsync(0x01, 0, 10);
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
@@ -83,7 +83,7 @@ public class TcpClientTest
     //    // 连接 Master
     //    await client.ConnectAsync("127.0.0.1", 502);
 
-    //    // 读取 0x01 从站离散输入数据
+    //    // 读取 0x01 从站输入寄存器数据
     //    var response = await client.ReadInputRegistersAsync(0x01, 0, 10);
     //    Assert.NotNull(response);
     //    Assert.Equal(10, response.Length);
