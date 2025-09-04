@@ -4,6 +4,7 @@
 
 using Longbow.TcpSocket;
 using System.Net;
+using System.Net.Mail;
 
 namespace Longbow.Modbus;
 
@@ -20,15 +21,17 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
 
-    public ValueTask<bool[]?> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints, ReadBool);
+    public ValueTask<bool[]?> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints, ReadBoolValues);
 
-    public ValueTask<bool[]?> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs, ReadBool);
+    public ValueTask<bool[]?> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs, ReadBoolValues);
 
-    public ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x03, startAddress, numberOfPoints, ReadUShort);
+    public ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x03, startAddress, numberOfPoints, ReadUShortValues);
 
-    public ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x04, startAddress, numberOfPoints, ReadUShort);
+    public ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x04, startAddress, numberOfPoints, ReadUShortValues);
 
-    public ValueTask<bool> WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value) => WriteBoolAsync(slaveAddress, 0x05, coilAddress, value);
+    public ValueTask<bool> WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value) => WriteBoolValuesAsync(slaveAddress, 0x05, coilAddress, [value]);
+
+    public ValueTask<bool> WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] values) => WriteBoolValuesAsync(slaveAddress, 0x0F, startAddress, values);
 
     public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
     {
@@ -36,16 +39,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
     }
 
     public Task<ushort[]> ReadWriteMultipleRegistersAsync(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteMultipleCoils(byte slaveAddress, ushort startAddress, bool[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data)
     {
         throw new NotImplementedException();
     }
@@ -96,28 +89,32 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         return parser(received, numberOfPoints);
     }
 
-    private ValueTask<bool> WriteBoolAsync(byte slaveAddress, byte functionCode, ushort address, bool value)
+    private ValueTask<bool> WriteBoolValuesAsync(byte slaveAddress, byte functionCode, ushort address, bool[] values)
     {
         if (!client.IsConnected)
         {
             throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
         }
 
-        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, WriteBool(address, value));
+        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, WriteBoolValues(address, values));
         return client.SendAsync(request);
     }
 
-    private static ReadOnlyMemory<byte> WriteBool(ushort address, bool value)
+    private static ReadOnlyMemory<byte> WriteBoolValues(ushort address, bool[] values)
     {
-        var data = new byte[4];
+        var data = new byte[2 + values.Length * 2];
         data[0] = (byte)(address >> 8);
         data[1] = (byte)address;
-        data[2] = value ? (byte)0xFF : (byte)0x00;
-        data[3] = 0x00;
+
+        for (var i = 0; i < values.Length; i++)
+        {
+            data[(i + 1) * 2] = values[i] ? (byte)0xFF : (byte)0x00;
+            data[(i + 1) * 2 + 1] = 0x00;
+        }
         return data;
     }
 
-    private static bool[] ReadBool(ReadOnlyMemory<byte> response, ushort numberOfPoints)
+    private static bool[] ReadBoolValues(ReadOnlyMemory<byte> response, ushort numberOfPoints)
     {
         var values = new bool[numberOfPoints];
         for (var i = 0; i < numberOfPoints; i++)
@@ -130,7 +127,7 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         return values;
     }
 
-    private static ushort[] ReadUShort(ReadOnlyMemory<byte> response, ushort numberOfPoints)
+    private static ushort[] ReadUShortValues(ReadOnlyMemory<byte> response, ushort numberOfPoints)
     {
         var values = new ushort[numberOfPoints];
         for (var i = 0; i < numberOfPoints; i++)

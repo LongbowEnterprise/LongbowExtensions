@@ -85,7 +85,7 @@ public interface IModbusTcpClient : IAsyncDisposable
     /// <param name="startAddress">Address to begin writing values.</param>
     /// <param name="data">Values to write.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data);
+    ValueTask<bool> WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] data);
 
     /// <summary>
     /// Asynchronously writes a single holding register.
