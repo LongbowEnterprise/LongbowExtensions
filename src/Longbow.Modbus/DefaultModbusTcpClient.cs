@@ -20,7 +20,7 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     public ValueTask<bool> ConnectAsync(IPEndPoint endPoint, CancellationToken token = default) => client.ConnectAsync(endPoint, token);
 
-    private async ValueTask<bool[]> ReadAsync(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints)
+    private async ValueTask<TResult?> ReadAsync<TResult>(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints, Func<ReadOnlyMemory<byte>, ushort, TResult> parser)
     {
         if (!client.IsConnected)
         {
@@ -31,7 +31,7 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         var result = await client.SendAsync(data);
         if (!result)
         {
-            return [];
+            return default;
         }
 
         _receiveCancellationTokenSource ??= new();
@@ -40,15 +40,32 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
         if (!ValidateResponse(response, data.Span[..2], functionCode))
         {
-            return [];
+            return default;
         }
 
+        return parser(received, numberOfPoints);
+    }
+
+    private static bool[] ReadBool(ReadOnlyMemory<byte> response, ushort numberOfPoints)
+    {
         var values = new bool[numberOfPoints];
         for (var i = 0; i < numberOfPoints; i++)
         {
             var byteIndex = 9 + i / 8;
             var bitIndex = i % 8;
-            values[i] = (response[byteIndex] & (1 << bitIndex)) != 0;
+            values[i] = (response.Span[byteIndex] & (1 << bitIndex)) != 0;
+        }
+
+        return values;
+    }
+
+    private static ushort[] ReadUShort(ReadOnlyMemory<byte> response, ushort numberOfPoints)
+    {
+        var values = new ushort[numberOfPoints];
+        for (var i = 0; i < numberOfPoints; i++)
+        {
+            int offset = 9 + (i * 2);
+            values[i] = (ushort)((response.Span[offset] << 8) | response.Span[offset + 1]);
         }
 
         return values;
@@ -94,34 +111,13 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         return true;
     }
 
-    public ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints);
+    public ValueTask<bool[]?> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x01, startAddress, numberOfPoints, ReadBool);
 
-    public ValueTask<bool[]> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs);
+    public ValueTask<bool[]?> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfInputs) => ReadAsync(slaveAddress, 0x02, startAddress, numberOfInputs, ReadBool);
 
-    public ushort[] ReadHoldingRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
+    public ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x03, startAddress, numberOfPoints, ReadUShort);
 
-    public Task<ushort[]> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
-
-    public ushort[] ReadInputRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<ushort[]> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool[] ReadInputs(byte slaveAddress, ushort startAddress, ushort numberOfPoints)
-    {
-        throw new NotImplementedException();
-    }
+    public ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints) => ReadAsync(slaveAddress, 0x04, startAddress, numberOfPoints, ReadUShort);
 
     public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
     {

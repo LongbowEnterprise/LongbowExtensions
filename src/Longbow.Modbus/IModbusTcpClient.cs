@@ -30,60 +30,44 @@ public interface IModbusTcpClient : IAsyncDisposable
     Exception? Exception { get; }
 
     /// <summary>
-    /// 从指定站点异步读取线圈（FC1），默认超时时间为1000ms。
+    /// 从指定站点异步读取线圈方法 功能码 0x01
     /// <para>Asynchronously reads from 1 to 2000 contiguous coils status.</para>
     /// </summary>
     /// <param name="slaveAddress">Address of device to read values from.</param>
     /// <param name="startAddress">Address to begin reading.</param>
     /// <param name="numberOfPoints">Number of coils to read.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    ValueTask<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    ValueTask<bool[]?> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
-    /// 从指定站点异步读取离散输入（FC2），默认超时时间为1000ms。
+    /// 从指定站点异步读取离散输入方法 功能码 0x02
     /// <para>Asynchronously reads from 1 to 2000 contiguous discrete input status.</para>
     /// </summary>
     /// <param name="slaveAddress">Address of device to read values from.</param>
     /// <param name="startAddress">Address to begin reading.</param>
     /// <param name="numberOfPoints">Number of discrete inputs to read.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    ValueTask<bool[]> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    ValueTask<bool[]?> ReadInputsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
-    /// Reads contiguous block of holding registers.
-    /// </summary>
-    /// <param name="slaveAddress">Address of device to read values from.</param>
-    /// <param name="startAddress">Address to begin reading.</param>
-    /// <param name="numberOfPoints">Number of holding registers to read.</param>
-    /// <returns>Holding registers status.</returns>
-    ushort[] ReadHoldingRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
-
-    /// <summary>
-    /// Asynchronously reads contiguous block of holding registers.
+    /// 从指定站点异步读取保持寄存器方法 功能码 0x03
+    /// <para>Asynchronously reads contiguous block of holding registers.</para>
     /// </summary>
     /// <param name="slaveAddress">Address of device to read values from.</param>
     /// <param name="startAddress">Address to begin reading.</param>
     /// <param name="numberOfPoints">Number of holding registers to read.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    Task<ushort[]> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    ValueTask<ushort[]?> ReadHoldingRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
-    /// Reads contiguous block of input registers.
-    /// </summary>
-    /// <param name="slaveAddress">Address of device to read values from.</param>
-    /// <param name="startAddress">Address to begin reading.</param>
-    /// <param name="numberOfPoints">Number of holding registers to read.</param>
-    /// <returns>Input registers status.</returns>
-    ushort[] ReadInputRegisters(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
-
-    /// <summary>
-    /// Asynchronously reads contiguous block of input registers.
+    /// 从指定站点异步读取输入寄存器方法 功能码 0x04
+    /// <para>Asynchronously reads contiguous block of input registers.</para>
     /// </summary>
     /// <param name="slaveAddress">Address of device to read values from.</param>
     /// <param name="startAddress">Address to begin reading.</param>
     /// <param name="numberOfPoints">Number of holding registers to read.</param>
     /// <returns>A task that represents the asynchronous read operation.</returns>
-    Task<ushort[]> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
+    ValueTask<ushort[]?> ReadInputRegistersAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
     /// Writes a single coil value.

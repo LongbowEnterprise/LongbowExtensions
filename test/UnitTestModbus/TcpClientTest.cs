@@ -24,6 +24,7 @@ public class TcpClientTest
 
         // 读取 0x01 从站线圈数据
         var response = await client.ReadCoilsAsync(0x01, 0, 10);
+        Assert.NotNull(response);
         Assert.Equal(10, response.Length);
     }
 
@@ -43,6 +44,48 @@ public class TcpClientTest
 
         // 读取 0x01 从站离散输入数据
         var response = await client.ReadInputsAsync(0x01, 0, 10);
+        Assert.NotNull(response);
+        Assert.Equal(10, response.Length);
+    }
+
+
+    [Fact]
+    public async Task ReadHoldingRegistersAsync_Ok()
+    {
+        var sc = new ServiceCollection();
+        sc.AddTcpSocketFactory();
+        sc.AddModbusFactory();
+
+        var provider = sc.BuildServiceProvider();
+        var factory = provider.GetRequiredService<IModbusFactory>();
+        await using var client = factory.GetOrCreateTcpMaster("test");
+
+        // 连接 Master
+        await client.ConnectAsync("127.0.0.1", 502);
+
+        // 读取 0x01 从站离散输入数据
+        var response = await client.ReadHoldingRegistersAsync(0x01, 0, 10);
+        Assert.NotNull(response);
+        Assert.Equal(10, response.Length);
+    }
+
+    [Fact]
+    public async Task ReadInputRegistersAsync_Ok()
+    {
+        var sc = new ServiceCollection();
+        sc.AddTcpSocketFactory();
+        sc.AddModbusFactory();
+
+        var provider = sc.BuildServiceProvider();
+        var factory = provider.GetRequiredService<IModbusFactory>();
+        await using var client = factory.GetOrCreateTcpMaster("test");
+
+        // 连接 Master
+        await client.ConnectAsync("127.0.0.1", 502);
+
+        // 读取 0x01 从站离散输入数据
+        var response = await client.ReadInputRegistersAsync(0x01, 0, 10);
+        Assert.NotNull(response);
         Assert.Equal(10, response.Length);
     }
 }
