@@ -94,7 +94,7 @@ public interface IModbusTcpClient : IAsyncDisposable
     /// <param name="registerAddress">Address to write.</param>
     /// <param name="value">Value to write.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteSingleRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value);
+    ValueTask<bool> WriteRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value);
 
     /// <summary>
     /// Asynchronously writes a block of 1 to 123 contiguous registers.
@@ -103,7 +103,7 @@ public interface IModbusTcpClient : IAsyncDisposable
     /// <param name="startAddress">Address to begin writing values.</param>
     /// <param name="data">Values to write.</param>
     /// <returns>A task that represents the asynchronous write operation.</returns>
-    Task WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data);
+    ValueTask<bool> WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data);
 
     /// <summary>
     /// Performs a combination of one read operation and one write operation in a single Modbus transaction.

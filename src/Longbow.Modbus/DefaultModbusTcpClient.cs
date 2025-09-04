@@ -33,6 +33,10 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
     public ValueTask<bool> WriteMultipleCoilsAsync(byte slaveAddress, ushort startAddress, bool[] values) => WriteBoolValuesAsync(slaveAddress, 0x0F, startAddress, values);
 
+    public ValueTask<bool> WriteRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value) => WriteUShortValuesAsync(slaveAddress, 0x06, registerAddress, [value]);
+
+    public ValueTask<bool> WriteMultipleRegistersAsync(byte slaveAddress, ushort registerAddress, ushort[] values) => WriteUShortValuesAsync(slaveAddress, 0x10, registerAddress, values);
+
     public ushort[] ReadWriteMultipleRegisters(byte slaveAddress, ushort startReadAddress, ushort numberOfPointsToRead, ushort startWriteAddress, ushort[] writeData)
     {
         throw new NotImplementedException();
@@ -43,25 +47,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         throw new NotImplementedException();
     }
 
-    public void WriteMultipleRegisters(byte slaveAddress, ushort startAddress, ushort[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteMultipleRegistersAsync(byte slaveAddress, ushort startAddress, ushort[] data)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void WriteSingleRegister(byte slaveAddress, ushort registerAddress, ushort value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task WriteSingleRegisterAsync(byte slaveAddress, ushort registerAddress, ushort value)
-    {
-        throw new NotImplementedException();
-    }
 
     private async ValueTask<TResult?> ReadAsync<TResult>(byte slaveAddress, byte functionCode, ushort startAddress, ushort numberOfPoints, Func<ReadOnlyMemory<byte>, ushort, TResult> parser)
     {
@@ -100,6 +85,17 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         return client.SendAsync(request);
     }
 
+    private ValueTask<bool> WriteUShortValuesAsync(byte slaveAddress, byte functionCode, ushort address, ushort[] values)
+    {
+        if (!client.IsConnected)
+        {
+            throw new InvalidOperationException("站点未连接请先使用 ConnectAsync 连接设备");
+        }
+
+        var request = _builder.BuildWriteRequest(slaveAddress, functionCode, WriteUShortValues(address, values));
+        return client.SendAsync(request);
+    }
+
     private static ReadOnlyMemory<byte> WriteBoolValues(ushort address, bool[] values)
     {
         var data = new byte[2 + values.Length * 2];
@@ -108,8 +104,22 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
         for (var i = 0; i < values.Length; i++)
         {
-            data[(i + 1) * 2] = values[i] ? (byte)0xFF : (byte)0x00;
-            data[(i + 1) * 2 + 1] = 0x00;
+            data[i * 2 + 2] = values[i] ? (byte)0xFF : (byte)0x00;
+            data[i * 2 + 3] = 0x00;
+        }
+        return data;
+    }
+
+    private static ReadOnlyMemory<byte> WriteUShortValues(ushort address, ushort[] values)
+    {
+        var data = new byte[5 + values.Length * 2];
+        data[0] = (byte)(address >> 8);
+        data[1] = (byte)address;
+
+        for (var i = 0; i < values.Length; i++)
+        {
+            data[i * 2 + 2] = (byte)(values[i] >> 8);
+            data[i * 2 + 3] = (byte)(values[i] & 0xFF);
         }
         return data;
     }
