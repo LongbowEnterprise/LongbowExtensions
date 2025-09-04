@@ -17,12 +17,12 @@ class DefaultModbusFactory(IServiceProvider provider) : IModbusFactory
 {
     private readonly ConcurrentDictionary<string, IModbusTcpClient> _pool = new();
 
-    public IModbusTcpClient GetOrCreateTcpMaster(string name, Action<ModbusTcpClientOptions> valueFactory)
+    public IModbusTcpClient GetOrCreateTcpMaster(string name, Action<ModbusTcpClientOptions>? valueFactory = null)
     {
         return _pool.GetOrAdd(name, key =>
         {
             var options = new ModbusTcpClientOptions();
-            valueFactory(options);
+            valueFactory?.Invoke(options);
 
             var factory = provider.GetRequiredService<ITcpSocketFactory>();
             var client = factory.GetOrCreate(name, op =>
