@@ -72,7 +72,7 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         }
 
         // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
-        if (response[7] == 0x83)
+        if (response[7] == 0x80 + functionCode)
         {
             Exception = new Exception($"Modbus abnormal response, error code: {response[8]}. 异常响应，错误码: {response[8]}");
             return false;
