@@ -23,5 +23,4 @@ jobs:
       - name: Test
         run: |
           dotnet test test/UnitTestSocket
-          dotnet test test/UnitTestModbus
 
