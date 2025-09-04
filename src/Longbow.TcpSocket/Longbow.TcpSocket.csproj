@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>9.0.0</Version>
+    <Version>9.0.1</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,7 +33,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="$(NET9Version)" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(NET9Version)" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Longbow.Socket\Longbow.Socket.csproj" />
   </ItemGroup>
