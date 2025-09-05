@@ -80,13 +80,13 @@ public class ModbusTcpMessageBuilder
         : Interlocked.Increment(ref _transactionId);
 
     /// <summary>
-    /// 验证并解析 Modbus TCP 读取响应消息方法
+    /// 验证 Modbus TCP 读取响应消息方法
     /// </summary>
     /// <param name="response"></param>
     /// <param name="functionCode"></param>
     /// <param name="exception"></param>
     /// <returns></returns>
-    public bool TryParseReadResponse(ReadOnlyMemory<byte> response, byte functionCode, [NotNullWhen(false)] out Exception? exception)
+    public bool TryValidateReadResponse(ReadOnlyMemory<byte> response, byte functionCode, [NotNullWhen(false)] out Exception? exception)
     {
         // 解析电文
         // 检查响应长度

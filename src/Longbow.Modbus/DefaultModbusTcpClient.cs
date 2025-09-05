@@ -50,7 +50,7 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         _receiveCancellationTokenSource ??= new();
         var received = await client.ReceiveAsync(_receiveCancellationTokenSource.Token);
 
-        if (!_builder.TryParseReadResponse(received, functionCode, out var exception))
+        if (!_builder.TryValidateReadResponse(received, functionCode, out var exception))
         {
             Exception = exception;
             return default;
