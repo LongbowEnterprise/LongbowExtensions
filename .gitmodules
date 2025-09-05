@@ -1,0 +1,9 @@
+[submodule "Longbow.Socket"]
+	path = Longbow.Socket
+	url = git@github.com:LongbowEnterprise/Longbow.Socket.git
+[submodule "Longbow.Modbus"]
+	path = Longbow.Modbus
+	url = git@github.com:LongbowEnterprise/Longbow.Modbus.git
+[submodule "Longbow.TcpSocket"]
+	path = Longbow.TcpSocket
+	url = git@github.com:LongbowEnterprise/Longbow.TcpSocket.git

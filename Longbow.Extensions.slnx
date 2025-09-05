@@ -19,6 +19,13 @@
   <Folder Name="/props/">
     <File Path="Directory.Build.props" />
   </Folder>
-  <Folder Name="/src/" />
-  <Folder Name="/test/" />
+  <Folder Name="/src/">
+    <Project Path="Longbow.Modbus/src/Longbow.Modbus/Longbow.Modbus.csproj" />
+    <Project Path="Longbow.Socket/src/Longbow.Socket/Longbow.Socket.csproj" />
+    <Project Path="Longbow.TcpSocket/src/Longbow.TcpSocket/Longbow.TcpSocket.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="Longbow.Modbus/test/UnitTestModbus/UnitTestModbus.csproj" />
+    <Project Path="Longbow.TcpSocket/test/UnitTestSocket/UnitTestSocket.csproj" />
+  </Folder>
 </Solution>
