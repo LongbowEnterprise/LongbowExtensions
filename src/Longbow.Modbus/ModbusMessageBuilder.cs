@@ -88,7 +88,6 @@ public class ModbusTcpMessageBuilder
     /// <returns></returns>
     public bool TryValidateReadResponse(ReadOnlyMemory<byte> response, byte functionCode, [NotNullWhen(false)] out Exception? exception)
     {
-        // 解析电文
         // 检查响应长度
         if (response.Length < 9)
         {
