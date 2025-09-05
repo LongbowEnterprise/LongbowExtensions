@@ -32,6 +32,7 @@ public class ModbusTcpMessageBuilder
             0x00,                          // 03 协议标识符低字节
             0x00,                          // 04 长度高字节（后续字节数）
             0x06,                          // 05 长度低字节（6字节PDU）
+
             // PDU部分
             slaveAddress,                  // 06 从站地址
             functionCode,                  // 07 功能码
@@ -62,7 +63,7 @@ public class ModbusTcpMessageBuilder
         request[2] = 0x00;                          // 02 协议标识符高字节（Modbus固定0）
         request[3] = 0x00;                          // 03 协议标识符低字节
         request[4] = 0x00;                          // 04 长度高字节（后续字节数）
-        request[5] = (byte)(2 + data.Length);       // 05 长度低字节（6字节PDU）
+        request[5] = (byte)(2 + data.Length);       // 05 长度低字节（PDU数据）
 
         // PDU部分
         request[6] = slaveAddress;                  // 06 从站地址
@@ -77,4 +78,52 @@ public class ModbusTcpMessageBuilder
     private uint GetTransactionId() => _transactionId >= ushort.MaxValue
         ? Interlocked.Exchange(ref _transactionId, 0)
         : Interlocked.Increment(ref _transactionId);
+
+    /// <summary>
+    /// 验证并解析 Modbus TCP 读取响应消息方法
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="functionCode"></param>
+    /// <param name="exception"></param>
+    /// <returns></returns>
+    public bool TryParseReadResponse(ReadOnlyMemory<byte> response, byte functionCode, [NotNullWhen(false)] out Exception? exception)
+    {
+        // 解析电文
+        // 检查响应长度
+        if (response.Length < 9)
+        {
+            exception = new Exception("Response length is insufficient 响应长度不足");
+            return false;
+        }
+
+        // 检查事务标识符是否匹配
+        if (response.Span[0] != (_transactionId >> 8) || response.Span[1] != (_transactionId & 0xFF))
+        {
+            exception = new Exception("Transaction identifier mismatch 事务标识符不匹配");
+            return false;
+        }
+
+        // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
+        if (response.Span[7] == 0x80 + functionCode)
+        {
+            exception = new Exception($"Modbus abnormal response, error code: {response.Span[8]}. 异常响应，错误码: {response.Span[8]}");
+            return false;
+        }
+        else if (response.Span[7] != functionCode)
+        {
+            exception = new Exception($"Function code does not match 功能码不匹配期望值 0x{functionCode:X2} 实际值 0x{response.Span[7]:X2}");
+            return false;
+        }
+
+        // 获取数据字节数
+        var byteCount = response.Span[8];
+        if (byteCount + 9 != response.Length)
+        {
+            exception = new Exception($"Response length does not match byte count 响应长度与字节计数不匹配 期望值 {byteCount + 9} 实际值 {response.Length}");
+            return false;
+        }
+
+        exception = null;
+        return true;
+    }
 }

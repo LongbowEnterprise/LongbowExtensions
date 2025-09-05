@@ -49,10 +49,10 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
 
         _receiveCancellationTokenSource ??= new();
         var received = await client.ReceiveAsync(_receiveCancellationTokenSource.Token);
-        var response = received.Span;
 
-        if (!ValidateResponse(response, request.Span[..2], functionCode))
+        if (!_builder.TryParseReadResponse(received, functionCode, out var exception))
         {
+            Exception = exception;
             return default;
         }
 
@@ -195,46 +195,6 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         }
 
         return values;
-    }
-
-    private bool ValidateResponse(ReadOnlySpan<byte> response, ReadOnlySpan<byte> transactionId, byte functionCode)
-    {
-        // 解析电文
-        // 检查响应长度
-        if (response.Length < 9)
-        {
-            Exception = new Exception("Response length is insufficient 响应长度不足");
-            return false;
-        }
-
-        // 检查事务标识符是否匹配
-        if (response[0] != transactionId[0] || response[1] != transactionId[1])
-        {
-            Exception = new Exception("Transaction identifier mismatch 事务标识符不匹配");
-            return false;
-        }
-
-        // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
-        if (response[7] == 0x80 + functionCode)
-        {
-            Exception = new Exception($"Modbus abnormal response, error code: {response[8]}. 异常响应，错误码: {response[8]}");
-            return false;
-        }
-        else if (response[7] != functionCode)
-        {
-            Exception = new Exception($"Function code does not match 功能码不匹配期望值 0x{functionCode:X2} 实际值 0x{response[7]:X2}");
-            return false;
-        }
-
-        // 获取数据字节数
-        var byteCount = response[8];
-        if (byteCount + 9 != response.Length)
-        {
-            Exception = new Exception($"Response length does not match byte count 响应长度与字节计数不匹配 期望值 {byteCount + 9} 实际值 {response.Length}");
-            return false;
-        }
-
-        return true;
     }
 
     /// <summary>
