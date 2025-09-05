@@ -48,7 +48,6 @@ public class TcpClientTest
         Assert.Equal(10, response.Length);
     }
 
-
     [Fact]
     public async Task ReadHoldingRegistersAsync_Ok()
     {
