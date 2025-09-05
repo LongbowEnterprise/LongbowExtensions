@@ -11,17 +11,17 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <RepositoryUrl>https://github.com/BootstrapBlazor/BootstrapBlazor.Extensions?wt.mc_id=DT-MVP-5004174</RepositoryUrl>
-    <PackageProjectUrl>https://www.blazor.zone</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LongbowEnterprise/LongbowExtensions?wt.mc_id=DT-MVP-5004174</RepositoryUrl>
+    <PackageProjectUrl></PackageProjectUrl>
     <RepositoryType>github</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <DocumentationFile>$(MSBuildProjectName).xml</DocumentationFile>
-    <PackageReadmeFile>readme.md</PackageReadmeFile>
-    <PackageReleaseNotes>https://github.com/BootstrapBlazor/BootstrapBlazor.Extensions/releases?wt.mc_id=DT-MVP-5004174</PackageReleaseNotes>
+    <!--<PackageReadmeFile>readme.md</PackageReadmeFile>-->
+    <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="readme.md" Pack="true" PackagePath="" />
+    <!--<None Include="readme.md" Pack="true" PackagePath="" />-->
   </ItemGroup>
 
 </Project>
