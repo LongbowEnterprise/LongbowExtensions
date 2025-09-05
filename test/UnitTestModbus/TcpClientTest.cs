@@ -24,6 +24,10 @@ public class TcpClientTest
         var response = await client.ReadCoilsAsync(0x01, 0, 10);
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
+
+        response = await client.ReadCoilsAsync(0x01, 0, 5);
+        Assert.NotNull(response);
+        Assert.Equal(5, response.Length);
     }
 
     [Fact]
@@ -43,7 +47,6 @@ public class TcpClientTest
         Assert.NotNull(response);
         Assert.Equal(10, response.Length);
     }
-
 
     [Fact]
     public async Task ReadHoldingRegistersAsync_Ok()
