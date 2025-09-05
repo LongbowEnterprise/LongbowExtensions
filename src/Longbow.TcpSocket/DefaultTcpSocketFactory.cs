@@ -14,7 +14,7 @@ sealed class DefaultTcpSocketFactory(IServiceProvider provider) : ITcpSocketFact
 {
     private readonly ConcurrentDictionary<string, ITcpSocketClient> _pool = new();
 
-    public ITcpSocketClient GetOrCreate(string name, Action<TcpSocketClientOptions> valueFactory)
+    public ITcpSocketClient GetOrCreate(string name, Action<TcpSocketClientOptions>? valueFactory = null)
     {
         if (!SocketLogging.Inited)
         {
@@ -27,7 +27,7 @@ sealed class DefaultTcpSocketFactory(IServiceProvider provider) : ITcpSocketFact
         return _pool.GetOrAdd(name, key =>
         {
             var options = new TcpSocketClientOptions();
-            valueFactory(options);
+            valueFactory?.Invoke(options);
             var client = new DefaultTcpSocketClient(options)
             {
                 ServiceProvider = provider,
