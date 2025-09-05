@@ -72,12 +72,10 @@ class DefaultModbusTcpClient(ITcpSocketClient client) : IModbusTcpClient
         if (result)
         {
             var response = await client.ReceiveAsync();
-            result = false;
-            if (response.Length == 12 && response.Span[7] == functionCode)
+            if (!_builder.TryValidateWriteResponse(response, functionCode, data, out var exception))
             {
-                result = values.Length == 1
-                    ? data.Span.SequenceEqual(response.Span[8..])
-                    : response.Span[10..11].SequenceEqual(data.Span[2..3]);
+                Exception = exception;
+                result = false;
             }
         }
         return result;

@@ -125,4 +125,60 @@ public class ModbusTcpMessageBuilder
         exception = null;
         return true;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="response"></param>
+    /// <param name="functionCode"></param>
+    /// <param name="data"></param>
+    /// <param name="exception"></param>
+    /// <returns></returns>
+    public bool TryValidateWriteResponse(ReadOnlyMemory<byte> response, byte functionCode, ReadOnlyMemory<byte> data, [NotNullWhen(false)] out Exception? exception)
+    {
+        // 检查响应长度
+        if (response.Length < 9)
+        {
+            exception = new Exception("Response length is insufficient 响应长度不足");
+            return false;
+        }
+
+        // 检查事务标识符是否匹配
+        if (response.Span[0] != (_transactionId >> 8) || response.Span[1] != (_transactionId & 0xFF))
+        {
+            exception = new Exception("Transaction identifier mismatch 事务标识符不匹配");
+            return false;
+        }
+
+        // 检查功能码 (正常响应应与请求相同，异常响应 = 请求功能码 + 0x80)
+        if (response.Span[7] == 0x80 + functionCode)
+        {
+            exception = new Exception($"Modbus abnormal response, error code: {response.Span[8]}. 异常响应，错误码: {response.Span[8]}");
+            return false;
+        }
+        else if (response.Span[7] != functionCode)
+        {
+            exception = new Exception($"Function code does not match 功能码不匹配期望值 0x{functionCode:X2} 实际值 0x{response.Span[7]:X2}");
+            return false;
+        }
+
+        if (response.Length == 12 && response.Span[7] == functionCode)
+        {
+            var expected = data.Length == 4
+                ? data
+                : data[0..4];
+            var actual = data.Length == 4
+                ? response[8..]
+                : response[8..12];
+
+            if (!expected.Span.SequenceEqual(actual.Span))
+            {
+                exception = new Exception($"return data does not match 返回值不匹配预期值 期望值: {BitConverter.ToString(expected.ToArray())} 实际值: {BitConverter.ToString(actual.ToArray())}");
+                return false;
+            }
+        }
+
+        exception = null;
+        return true;
+    }
 }
